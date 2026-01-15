@@ -7,11 +7,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import ru.alexeypostnov.chordflow.data.model.SongDetailsModel
+import ru.alexeypostnov.chordflow.domain.DeleteSongByIdUseCase
 import ru.alexeypostnov.chordflow.domain.GetSongsListByAuthorUseCase
 
 class SongsListViewModel(
     private val author: String,
-    private val getSongsListByAuthorUseCase: GetSongsListByAuthorUseCase
+    private val getSongsListByAuthorUseCase: GetSongsListByAuthorUseCase,
+    private val deleteSongByIdUseCase: DeleteSongByIdUseCase
 ) : ViewModel() {
     private val _songs = MutableStateFlow<List<SongDetailsModel>>(emptyList())
     val songs: StateFlow<List<SongDetailsModel>> get() = _songs.asStateFlow()
@@ -58,6 +60,16 @@ class SongsListViewModel(
                 }
             } finally {
                 _isLoading.value = false
+            }
+        }
+    }
+
+    fun deleteSongById(songId: String) {
+        viewModelScope.launch {
+            try {
+                deleteSongByIdUseCase(songId)
+            } catch (e: Exception) {
+
             }
         }
     }

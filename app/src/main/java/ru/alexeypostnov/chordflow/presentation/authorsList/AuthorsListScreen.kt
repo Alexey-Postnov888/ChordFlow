@@ -130,17 +130,18 @@ fun AuthorItem(author: ResponseAuthorDetailsModel, modifier: Modifier) {
         ) {
             val (authorTitle, songsCount) = createRefs()
             Text(author.author,
-                fontSize = 18.sp,
+                fontSize = 20.sp,
                 color = colorScheme.primary,
                 modifier = Modifier.constrainAs(authorTitle) {
                     top.linkTo(parent.top)
                     start.linkTo(parent.start)
                 })
+
             Text("Всего песен: ${author.songsCount}",
-                fontSize = 16.sp,
+                fontSize = 18.sp,
                 color = colorScheme.secondary,
                 modifier = Modifier.constrainAs(songsCount) {
-                    top.linkTo(authorTitle.bottom)
+                    top.linkTo(authorTitle.bottom, margin = 5.dp)
                     start.linkTo(authorTitle.start)
                 })
         }
