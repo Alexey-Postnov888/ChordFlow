@@ -7,18 +7,19 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import ru.alexeypostnov.chordflow.data.model.ChordLineModel
-import ru.alexeypostnov.chordflow.data.model.ResponseSongDetailsModel
+import ru.alexeypostnov.chordflow.data.model.SongDetailsModel
 import ru.alexeypostnov.chordflow.data.utils.ChordParser
 import ru.alexeypostnov.chordflow.domain.DeleteSongByIdUseCase
 import ru.alexeypostnov.chordflow.domain.GetSongDetailsByIdUseCase
 
 class SongDetailsViewModel(
+    private val songId: String,
     private val getSongDetailsByIdUseCase: GetSongDetailsByIdUseCase,
     private val deleteSongByIdUseCase: DeleteSongByIdUseCase,
     private val chordParser: ChordParser
 ): ViewModel() {
-    private val _songDetails = MutableStateFlow<ResponseSongDetailsModel>(ResponseSongDetailsModel.empty())
-    val songDetails: StateFlow<ResponseSongDetailsModel> get() = _songDetails
+    private val _songDetails = MutableStateFlow<SongDetailsModel>(SongDetailsModel.empty())
+    val songDetails: StateFlow<SongDetailsModel> get() = _songDetails
 
     private val _parsedText = MutableStateFlow<List<ChordLineModel>>(emptyList())
     val parsedText: StateFlow<List<ChordLineModel>> get() = _parsedText
@@ -32,11 +33,15 @@ class SongDetailsViewModel(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> get() = _error.asStateFlow()
 
-    fun loadSongDetailsWithCache(songId: String) {
+    init {
+        loadSongDetailsWithCache()
+    }
+
+    fun loadSongDetailsWithCache() {
         viewModelScope.launch {
             getSongDetailsByIdUseCase.getSongDetailsWithCache(songId).collect { song ->
                 song?.let {
-                    _songDetails.value = ResponseSongDetailsModel(
+                    _songDetails.value = SongDetailsModel(
                         id = song.id,
                         title = song.title,
                         author = song.author,
@@ -47,7 +52,7 @@ class SongDetailsViewModel(
         }
     }
 
-    fun loadSongDetails(songId: String) {
+    fun loadSongDetails() {
         if (_isLoading.value) return
 
         viewModelScope.launch {
@@ -55,16 +60,17 @@ class SongDetailsViewModel(
             _error.value = null
 
             try {
-                getSongDetailsByIdUseCase(songId).apply {
-                    this?.let { _songDetails.value = it }
+                getSongDetailsByIdUseCase(songId)?.let {
+                    _songDetails.value = it
                 }
 
                 chordParser.parseText(songDetails.value.text).apply {
                     this.let { _parsedText.value = it }
                 }
             } catch (e: Exception) {
-                _songDetails.value = ResponseSongDetailsModel.empty()
-                _error.value = "Ошибка загрузки текста песни"
+                if (_parsedText.value.isEmpty()) {
+                    _error.value = "Ошибка загрузки списка песен"
+                }
             } finally {
                 _isLoading.value = false
             }
@@ -72,7 +78,7 @@ class SongDetailsViewModel(
         }
     }
 
-    fun deleteSongById(songId: String) {
+    fun deleteSongById() {
         viewModelScope.launch {
             try {
                 deleteSongByIdUseCase(songId)

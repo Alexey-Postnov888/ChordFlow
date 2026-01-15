@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 import ru.alexeypostnov.chordflow.data.model.ChordLineModel
 import ru.alexeypostnov.chordflow.presentation.ErrorComponent
 
@@ -25,16 +26,16 @@ import ru.alexeypostnov.chordflow.presentation.ErrorComponent
 fun SongDetailsScreen(
     songId: String,
 ) {
-    val viewModel: SongDetailsViewModel = koinViewModel()
+    val viewModel: SongDetailsViewModel = koinViewModel(parameters = { parametersOf(songId) })
+
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val error by viewModel.error.collectAsStateWithLifecycle()
 
     LaunchedEffect(songId) {
-        viewModel.loadSongDetailsWithCache(songId)
-        viewModel.loadSongDetails(songId)
+        viewModel.loadSongDetails()
     }
 
     val parsedText by viewModel.parsedText.collectAsStateWithLifecycle()
-    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
-    val error by viewModel.error.collectAsStateWithLifecycle()
 
     SongDetailsScreenContent(
         parsedText = parsedText,
@@ -60,26 +61,40 @@ fun SongDetailsScreenContent(
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         }
 
-        if (!error.isNullOrEmpty()) {
-            ErrorComponent(error, modifier = Modifier
-                .constrainAs(errorComponent) {
-                    centerHorizontallyTo(parent)
-                    centerVerticallyTo(parent)
-                })
-        }
-
-        LazyColumn(
-            modifier = Modifier
-                .padding(horizontal = 10.dp)
-                .fillMaxWidth()
-                .constrainAs(songText) {
-                    top.linkTo(parent.top)
-                    start.linkTo(parent.start)
-                }
-        ) {
-            items(parsedText) { chordLine ->
-                ChordLineItemSeparate(chordLine = chordLine)
+        when {
+            !error.isNullOrEmpty() -> {
+                ErrorComponent(error, modifier = Modifier
+                    .constrainAs(errorComponent) {
+                        centerHorizontallyTo(parent)
+                        centerVerticallyTo(parent)
+                    })
             }
+
+            !isLoading && parsedText.isEmpty() -> {
+                ErrorComponent(error = "У этой песни нет текста...", modifier = Modifier
+                    .constrainAs(errorComponent) {
+                        centerHorizontallyTo(parent)
+                        centerVerticallyTo(parent)
+                    })
+            }
+
+            parsedText.isNotEmpty() -> {
+                LazyColumn(
+                    modifier = Modifier
+                        .padding(horizontal = 10.dp)
+                        .fillMaxWidth()
+                        .constrainAs(songText) {
+                            top.linkTo(parent.top)
+                            start.linkTo(parent.start)
+                        }
+                ) {
+                    items(parsedText) { chordLine ->
+                        ChordLineItemSeparate(chordLine = chordLine)
+                    }
+                }
+            }
+
+            else -> {  }
         }
     }
 }

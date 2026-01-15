@@ -18,6 +18,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 import ru.alexeypostnov.chordflow.presentation.ChordFlowScaffold
 import ru.alexeypostnov.chordflow.presentation.MenuItemModel
 import ru.alexeypostnov.chordflow.presentation.authorsList.AuthorsListScreen
@@ -103,7 +104,7 @@ class SongDetailsNavigationScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel: SongDetailsViewModel = koinViewModel()
+        val viewModel: SongDetailsViewModel = koinViewModel(parameters = { parametersOf(songId) })
 
         val isDeleted by viewModel.isDeleted.collectAsStateWithLifecycle()
 
@@ -128,7 +129,7 @@ class SongDetailsNavigationScreen(
                     text = "Удалить",
                     icon = Icons.Rounded.Delete,
                     onClick = {
-                        viewModel.deleteSongById(songId)
+                        viewModel.deleteSongById()
                     }
                 )
             )

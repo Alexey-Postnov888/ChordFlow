@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,18 +22,18 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.navigator.LocalNavigator
 import org.koin.androidx.compose.koinViewModel
-import ru.alexeypostnov.chordflow.data.model.ResponseSongModel
+import org.koin.core.parameter.parametersOf
+import ru.alexeypostnov.chordflow.data.model.SongDetailsModel
 import ru.alexeypostnov.chordflow.navigation.SongDetailsNavigationScreen
 import ru.alexeypostnov.chordflow.presentation.ErrorComponent
-import ru.alexeypostnov.chordflow.presentation.LoadingComponent
 
 @Composable
 fun SongsListScreen(author: String) {
-    val viewModel: SongsListViewModel = koinViewModel()
+    val viewModel: SongsListViewModel = koinViewModel(parameters = { parametersOf(author) })
     val navigator = LocalNavigator.current
 
     LaunchedEffect(Unit) {
-        viewModel.loadSongsList(author)
+        viewModel.loadSongsList()
     }
 
     val songs by viewModel.songs.collectAsState()
@@ -56,8 +57,8 @@ fun SongsListScreen(author: String) {
 
 @Composable
 fun SongsListScreenContent(
-    songs: List<ResponseSongModel>,
-    onSongClick: (ResponseSongModel) -> Unit,
+    songs: List<SongDetailsModel>,
+    onSongClick: (SongDetailsModel) -> Unit,
     isLoading: Boolean,
     error: String?,
 ) {
@@ -65,40 +66,48 @@ fun SongsListScreenContent(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        val (songsList, loadingComponent, errorComponent) = createRefs()
+        val (songsList, errorComponent) = createRefs()
 
         if (isLoading) {
-            LoadingComponent(
-                modifier = Modifier
-                    .constrainAs(loadingComponent) {
-                        centerHorizontallyTo(parent)
-                        centerVerticallyTo(parent)
-                    })
-        } else if (!error.isNullOrEmpty()) {
-            ErrorComponent(
-                error, modifier = Modifier
+            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+        }
+
+        when {
+            !error.isNullOrEmpty() -> {
+                ErrorComponent(error, modifier = Modifier
                     .constrainAs(errorComponent) {
                         centerHorizontallyTo(parent)
                         centerVerticallyTo(parent)
                     })
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .padding(10.dp)
-                    .constrainAs(songsList) {
-                        top.linkTo(parent.top)
-                        start.linkTo(parent.start)
-                        end.linkTo(parent.end)
+            }
+
+            !isLoading && songs.isEmpty() -> {
+                ErrorComponent(error = "Нет песен у этого исполнителя...", modifier = Modifier
+                    .constrainAs(errorComponent) {
+                        centerHorizontallyTo(parent)
+                        centerVerticallyTo(parent)
+                    })
+            }
+
+            songs.isNotEmpty() -> {
+                LazyColumn(
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .constrainAs(songsList) {
+                            top.linkTo(parent.top)
+                            start.linkTo(parent.start)
+                            end.linkTo(parent.end)
+                        }
+                ) {
+                    items(songs, key = { it.id }) { song ->
+                        SongItem(
+                            song,
+                            modifier = Modifier
+                                .clickable(onClick = {
+                                    onSongClick(song)
+                                })
+                        )
                     }
-            ) {
-                items(songs, key = { it.id }) { song ->
-                    SongItem(
-                        song,
-                        modifier = Modifier
-                            .clickable(onClick = {
-                                onSongClick(song)
-                            })
-                    )
                 }
             }
         }
@@ -106,7 +115,7 @@ fun SongsListScreenContent(
 }
 
 @Composable
-fun SongItem(song: ResponseSongModel, modifier: Modifier) {
+fun SongItem(song: SongDetailsModel, modifier: Modifier) {
     val colorScheme = MaterialTheme.colorScheme
     Card(
         modifier = modifier

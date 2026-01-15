@@ -8,18 +8,16 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import ru.alexeypostnov.chordflow.data.model.ResponseAuthorDetailsModel
-import ru.alexeypostnov.chordflow.data.model.ResponseSongDetailsModel
-import ru.alexeypostnov.chordflow.data.model.ResponseSongModel
 import ru.alexeypostnov.chordflow.data.model.SongDetailsModel
 
 interface ChordService {
     @GET("/songs")
-    suspend fun getSongsList(): Response<List<ResponseSongModel>>
+    suspend fun getSongsList(): Response<List<SongDetailsModel>>
 
     @GET("/songs/{songId}")
     suspend fun getSongDetailsById(
         @Path("songId") singId: String
-    ): Response<ResponseSongDetailsModel>
+    ): Response<SongDetailsModel>
 
     @POST("/songs")
     suspend fun createSong(
@@ -43,5 +41,5 @@ interface ChordService {
     @GET("songs/by-author/{author}")
     suspend fun getSongsListByAuthor(
         @Path("author") author: String
-    ): Response<List<ResponseSongModel>>
+    ): Response<List<SongDetailsModel>>
 }

@@ -84,8 +84,11 @@ val appModule = module {
 }
 
 val viewModelModule = module {
-    viewModel { SongsListViewModel(get()) }
-    viewModel { SongDetailsViewModel(get(), get(), get()) }
+    viewModel {(author: String) ->
+        SongsListViewModel(author, get())
+    }
+    viewModel { (songId: String) ->
+        SongDetailsViewModel(songId, get(), get(), get()) }
     viewModel { CreateSongViewModel(get()) }
     viewModel { EditSongViewModel(get(), get()) }
     viewModel { AuthorsListViewModel(get()) }

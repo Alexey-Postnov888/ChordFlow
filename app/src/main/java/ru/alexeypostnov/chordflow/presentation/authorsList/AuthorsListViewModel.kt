@@ -49,12 +49,13 @@ class AuthorsListViewModel(
             _error.value = null
 
             try {
-                getAuthorsListUseCase().apply {
-                    this?.let { _authors.value = it }
+                getAuthorsListUseCase()?.let {
+                    _authors.value = it
                 }
             } catch (e: Exception) {
-                _authors.value = emptyList()
-                _error.value = "Ошибка загрузки списка исполнителей"
+                if (_authors.value.isEmpty()) {
+                    _error.value = "Ошибка загрузки списка исполнителей"
+                }
             } finally {
                 _isLoading.value = false
             }

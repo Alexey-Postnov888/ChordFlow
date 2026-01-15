@@ -51,7 +51,7 @@ class CreateSongViewModel(
             val song = SongDetailsModel(
                 title = songTitle.value,
                 author = songAuthor.value,
-                text = songText.value
+                text = songText.value,
             )
 
             postCreateSongUseCase(song)

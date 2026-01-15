@@ -1,32 +1,30 @@
 package ru.alexeypostnov.chordflow.data.repository
 
 import ru.alexeypostnov.chordflow.data.model.ResponseAuthorDetailsModel
-import ru.alexeypostnov.chordflow.data.model.ResponseSongDetailsModel
-import ru.alexeypostnov.chordflow.data.model.ResponseSongModel
 import ru.alexeypostnov.chordflow.data.model.SongDetailsModel
 import ru.alexeypostnov.chordflow.data.network.ChordService
 
 interface ChordRepository {
-    suspend fun getSongsList(): List<ResponseSongModel>?
-    suspend fun getSongDetailsById(songId: String): ResponseSongDetailsModel?
+    suspend fun getSongsList(): List<SongDetailsModel>?
+    suspend fun getSongDetailsById(songId: String): SongDetailsModel?
     suspend fun createSong(song: SongDetailsModel)
     suspend fun deleteSongById(songId: String)
     suspend fun editSongById(songId: String, song: SongDetailsModel)
     suspend fun getAuthorsList(): List<ResponseAuthorDetailsModel>?
-    suspend fun getSongsListByAuthor(author: String): List<ResponseSongModel>?
+    suspend fun getSongsListByAuthor(author: String): List<SongDetailsModel>?
 }
 
 class ChordRepositoryImpl(
     private val service: ChordService
 ): ChordRepository {
-    override suspend fun getSongsList(): List<ResponseSongModel>? {
+    override suspend fun getSongsList(): List<SongDetailsModel>? {
         val response = service.getSongsList()
         return if (response.isSuccessful)
             return response.body()
         else null
     }
 
-    override suspend fun getSongDetailsById(songId: String): ResponseSongDetailsModel? {
+    override suspend fun getSongDetailsById(songId: String): SongDetailsModel? {
         val response = service.getSongDetailsById(songId)
         return if (response.isSuccessful)
             return response.body()
@@ -55,7 +53,7 @@ class ChordRepositoryImpl(
         else null
     }
 
-    override suspend fun getSongsListByAuthor(author: String): List<ResponseSongModel>? {
+    override suspend fun getSongsListByAuthor(author: String): List<SongDetailsModel>? {
         val response = service.getSongsListByAuthor(author)
         return if (response.isSuccessful)
             return response.body()

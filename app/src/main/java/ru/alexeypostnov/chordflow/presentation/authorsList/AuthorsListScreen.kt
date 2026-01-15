@@ -68,31 +68,45 @@ fun AuthorsListScreenContent(
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         }
 
-        if (!error.isNullOrEmpty()) {
-            ErrorComponent(error, modifier = Modifier
-                .constrainAs(errorComponent) {
-                    centerHorizontallyTo(parent)
-                    centerVerticallyTo(parent)
-                })
-        }
-
-        LazyColumn(
-            modifier = Modifier
-                .padding(10.dp)
-                .constrainAs(authorsList) {
-                    top.linkTo(parent.top)
-                    centerHorizontallyTo(parent)
-                }
-        ) {
-            items(authors, key = { it.author}) { author ->
-                AuthorItem(
-                    author,
-                    modifier = Modifier
-                        .clickable(onClick = {
-                            onAuthorClick(author)
-                        })
-                )
+        when {
+            !error.isNullOrEmpty() -> {
+                ErrorComponent(error, modifier = Modifier
+                    .constrainAs(errorComponent) {
+                        centerHorizontallyTo(parent)
+                        centerVerticallyTo(parent)
+                    })
             }
+
+            !isLoading && authors.isEmpty() -> {
+                ErrorComponent(error = "Авторы не найдены...", modifier = Modifier
+                    .constrainAs(errorComponent) {
+                        centerHorizontallyTo(parent)
+                        centerVerticallyTo(parent)
+                    })
+            }
+
+            authors.isNotEmpty() -> {
+                LazyColumn(
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .constrainAs(authorsList) {
+                            top.linkTo(parent.top)
+                            centerHorizontallyTo(parent)
+                        }
+                ) {
+                    items(authors, key = { it.author}) { author ->
+                        AuthorItem(
+                            author,
+                            modifier = Modifier
+                                .clickable(onClick = {
+                                    onAuthorClick(author)
+                                })
+                        )
+                    }
+                }
+            }
+
+            else -> {  }
         }
     }
 }

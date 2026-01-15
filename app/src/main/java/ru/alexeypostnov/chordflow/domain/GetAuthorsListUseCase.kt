@@ -16,24 +16,29 @@ class GetAuthorsListUseCaseImpl(
     val databaseRepository: ChordDatabaseRepository
 ): GetAuthorsListUseCase {
     override suspend fun invoke(): List<ResponseAuthorDetailsModel>? {
-        val authors = repository.getAuthorsList() ?: emptyList()
+        return try {
+            val authors = repository.getAuthorsList()
+                ?: throw Exception("Ошибка загрузки исполнителей")
 
-        authors.forEach { remoteAuthor ->
-            val localAuthor = databaseRepository.getAuthorByName(remoteAuthor.author)
+            authors.forEach { remoteAuthor ->
+                val localAuthor = databaseRepository.getAuthorByName(remoteAuthor.author)
 
-            val authorEntity = localAuthor?.copy(
-                author = remoteAuthor.author,
-                songsCount = remoteAuthor.songsCount
-            )
-                ?: AuthorEntity(
+                val authorEntity = localAuthor?.copy(
                     author = remoteAuthor.author,
                     songsCount = remoteAuthor.songsCount
                 )
+                    ?: AuthorEntity(
+                        author = remoteAuthor.author,
+                        songsCount = remoteAuthor.songsCount
+                    )
 
-            databaseRepository.upsertAuthor(authorEntity)
+                databaseRepository.upsertAuthor(authorEntity)
+            }
+
+            authors
+        } catch (e: Exception) {
+            null
         }
-
-        return authors
     }
 
     override fun getAuthorsWithCache() = databaseRepository.getAuthors()
