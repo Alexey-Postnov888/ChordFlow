@@ -19,6 +19,8 @@ import ru.alexeypostnov.chordflow.data.repository.ChordRepository
 import ru.alexeypostnov.chordflow.data.repository.ChordRepositoryImpl
 import ru.alexeypostnov.chordflow.data.utils.ChordParser
 import ru.alexeypostnov.chordflow.data.utils.ChordParserImpl
+import ru.alexeypostnov.chordflow.data.utils.DispatchersProvider
+import ru.alexeypostnov.chordflow.data.utils.DispatchersProviderImpl
 import ru.alexeypostnov.chordflow.domain.DeleteSongByIdUseCase
 import ru.alexeypostnov.chordflow.domain.DeleteSongByIdUseCaseImpl
 import ru.alexeypostnov.chordflow.domain.GetAuthorsListUseCase
@@ -38,7 +40,7 @@ import ru.alexeypostnov.chordflow.presentation.songDetails.SongDetailsViewModel
 import ru.alexeypostnov.chordflow.presentation.songsList.SongsListViewModel
 import java.util.concurrent.TimeUnit
 
-val appModule = module {
+val networkModule = module {
     single {
         Retrofit.Builder()
             .baseUrl("https://chordflow.alexeypostnov.ru/")
@@ -56,7 +58,9 @@ val appModule = module {
             .writeTimeout(30, TimeUnit.SECONDS)
             .build()
     } bind OkHttpClient::class
+}
 
+val databaseModule = module {
     single {
         Room.databaseBuilder(
             get(),
@@ -69,18 +73,25 @@ val appModule = module {
 
     single { get<ChordFlowDatabase>().authorsDAO } bind AuthorsDAO::class
     single { get<ChordFlowDatabase>().songsDAO } bind SongsDAO::class
+}
 
+val repositoryModule = module {
     singleOf(::ChordRepositoryImpl) bind ChordRepository::class
     singleOf(::ChordDatabaseRepositoryImpl) bind ChordDatabaseRepository::class
+}
 
+val useCaseModule = module {
     singleOf(::GetSongDetailsByIdUseCaseImpl) bind GetSongDetailsByIdUseCase::class
     singleOf(::PostCreateSongUseCaseImpl) bind PostCreateSongUseCase::class
     singleOf(::DeleteSongByIdUseCaseImpl) bind DeleteSongByIdUseCase::class
     singleOf(::PutEditSongByIdUseCaseImpl) bind PutEditSongByIdUseCase::class
     singleOf(::GetAuthorsListUseCaseImpl) bind GetAuthorsListUseCase::class
     singleOf(::GetSongsListByAuthorUseCaseImpl) bind GetSongsListByAuthorUseCase::class
+}
 
+val utilsModule = module {
     singleOf(::ChordParserImpl) bind ChordParser::class
+    singleOf(::DispatchersProviderImpl) bind DispatchersProvider::class
 }
 
 val viewModelModule = module {
